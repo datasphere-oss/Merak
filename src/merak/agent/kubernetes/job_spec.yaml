@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: merak-job
+  labels: {}
+spec:
+  template:
+    metadata:
+      labels: {}
+    spec:
+      containers:
+        - name: flow
+          image: merakhq/merak:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args: ["merak execute flow-run"]
+          env:
+            - name: merak__CLOUD__API
+              value: merak__CLOUD__API
+            - name: merak__CLOUD__AUTH_TOKEN
+              value: merak__CLOUD__AUTH_TOKEN
+            - name: merak__CONTEXT__FLOW_RUN_ID
+              value: merak__CONTEXT__FLOW_RUN_ID
+            - name: merak__CONTEXT__FLOW_ID
+              value: merak__CONTEXT__FLOW_ID
+            - name: merak__CONTEXT__NAMESPACE
+              value: merak__CONTEXT__NAMESPACE
+            - name: merak__CLOUD__AGENT__LABELS
+              value: merak__CLOUD__AGENT__LABELS
+            - name: merak__CLOUD__SEND_FLOW_RUN_LOGS
+              value: merak__CLOUD__SEND_FLOW_RUN_LOGS
+            # Backwards compatibility variable for `SEND_FLOW_RUN_LOGS`
+            - name: merak__LOGGING__LOG_TO_CLOUD
+              value: merak__LOGGING__LOG_TO_CLOUD
+            - name: merak__LOGGING__LEVEL
+              value: "INFO"
+            - name: merak__CLOUD__USE_LOCAL_SECRETS
+              value: "false"
+            - name: merak__ENGINE__FLOW_RUNNER__DEFAULT_CLASS
+              value: "merak.engine.cloud.CloudFlowRunner"
+            - name: merak__ENGINE__TASK_RUNNER__DEFAULT_CLASS
+              value: "merak.engine.cloud.CloudTaskRunner"
+          resources:
+            requests:
+              cpu: "100m"
+            limits:
+              cpu: "100m"
+          volumeMounts:
+            - name: ""
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ""
+      volumes:
+        - name: ""
