@@ -1,0 +1,147 @@
+version: "3.7"
+# Features driving version requirement
+# - init                          3.7
+# - networks.name                 3.5
+# - healthcheck.start_period      2.3
+# - healthcheck                   2.1
+
+services:
+  # PostgreSQL: the backing database which stores flow metadata
+  postgres:
+    image: "postgres:11"
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+    networks:
+      - merak-server
+    command:
+      - "postgres"
+      # explicitly set max connections
+      - "-c"
+      - "max_connections=150"
+    healthcheck:
+      test: pg_isready -q -d $${POSTGRES_DB} -U $${POSTGRES_USER} || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 60
+      start_period: 2s
+    restart: always
+
+  # Hasura: automatically generates a GraphQL schema from Postgres, provides most of the 'query' API
+  hasura:
+    image: "hasura/graphql-engine:v2.1.1"
+    init: true
+    ports:
+      - "127.0.0.1:${HASURA_HOST_PORT:-3000}:3000"
+    command: "graphql-engine serve"
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: ${DB_CONNECTION_URL}
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_SERVER_PORT: "3000"
+      HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE: 100
+      HASURA_GRAPHQL_LOG_LEVEL: "warn"
+      HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE: "true"
+    networks:
+      - merak-server
+    healthcheck:
+      test: wget -O - http://hasura:$${HASURA_GRAPHQL_SERVER_PORT}/healthz &>/dev/null || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 60
+      start_period: 1s
+    restart: always
+    depends_on:
+      - postgres
+
+  # GraphQL: provides most of the 'mutation' GraphQL API
+  graphql:
+    image: "merak/server:${merak_SERVER_TAG:-latest}"
+    ports:
+      - "127.0.0.1:${GRAPHQL_HOST_PORT:-4201}:4201"
+    command: bash -c "${merak_SERVER_DB_CMD} && python src/merak_server/services/graphql/server.py"
+    environment:
+      merak_SERVER_DB_CMD: ${merak_SERVER_DB_CMD:-"echo 'DATABASE MIGRATIONS SKIPPED'"}
+      merak_SERVER__DATABASE__CONNECTION_URL: ${DB_CONNECTION_URL}
+      merak_SERVER__HASURA__ADMIN_SECRET: ${merak_SERVER__HASURA__ADMIN_SECRET:-hasura-secret-admin-secret}
+      merak_SERVER__HASURA__HOST: hasura
+      merak_CORE_VERSION: ${merak_CORE_VERSION:-"UNKNOWN"}
+    networks:
+      - merak-server
+    healthcheck:
+      test: curl --fail --silent "http://graphql:4201/health" &> /dev/null || exit 1
+      interval: 20s
+      timeout: 2s
+      retries: 60
+      start_period: 1s
+    restart: always
+    depends_on:
+      - hasura
+
+  # Towel: runs a collection of simple services
+  towel:
+    image: "merakhq/server:${merak_SERVER_TAG:-latest}"
+    command: "python src/merak_server/services/towel/__main__.py"
+    environment:
+      merak_SERVER__HASURA__ADMIN_SECRET: ${merak_SERVER__HASURA__ADMIN_SECRET:-hasura-secret-admin-secret}
+      merak_SERVER__HASURA__HOST: hasura
+    networks:
+      - merak-server
+    restart: "always"
+    depends_on:
+      - graphql
+
+  # Apollo: combines the hasura and graphql schemas into a unified schema, the primary API entrypoint
+  apollo:
+    image: "merakhq/apollo:${merak_SERVER_TAG:-latest}"
+    ports:
+      - "${APOLLO_HOST_IP:-127.0.0.1}:${APOLLO_HOST_PORT:-4200}:4200"
+    command: bash -c "./post-start.sh && npm run serve"
+    environment:
+      HASURA_API_URL: ${HASURA_API_URL:-http://hasura:3000/v1alpha1/graphql}
+      merak_API_URL: ${merak_API_URL:-http://graphql:4201/graphql/}
+      merak_API_HEALTH_URL: ${merak_API_HEALTH_URL:-http://graphql:4201/health}
+      merak_SERVER__TELEMETRY__ENABLED: ${merak_SERVER__TELEMETRY__ENABLED:-true}
+      GRAPHQL_SERVICE_HOST: http://graphql
+      GRAPHQL_SERVICE_PORT: 4201
+    networks:
+      - merak-server
+    healthcheck:
+      test: curl --fail --silent "http://apollo:4200/.well-known/apollo/server-health" &> /dev/null || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 60
+      start_period: 1s
+    restart: always
+    depends_on:
+      - graphql
+      - hasura
+
+  # UI: the user interface that provides a visual dashboard for mutating and querying metadata
+  # The UI is a standalone web interface and only communicates with the Apollo GraphQL API via
+  #  the host from which it is accessed (i.e. the user's browser) .
+  ui:
+    image: "merak/ui:${merak_UI_TAG:-latest}"
+    ports:
+      - "${UI_HOST_IP:-127.0.0.1}:${UI_HOST_PORT:-8080}:8080"
+    command: "/intercept.sh"
+    environment:
+      merak_SERVER__APOLLO_URL: ${APOLLO_URL:-http://localhost:4200/graphql}
+    networks:
+      - merak-server
+    healthcheck:
+      test: curl --fail --silent --head "http://ui:8080/" &> /dev/null || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: always
+    depends_on:
+      - apollo
+
+networks:
+  merak-server:
+    name: merak-server
