@@ -1,0 +1,70 @@
+import json
+from json import JSONDecodeError
+from typing import Union
+
+from merak.tasks.secrets.base import SecretBase
+from merak.utilities.aws import get_boto_client
+from merak.utilities.tasks import defaults_from_attrs
+
+
+class AWSSecretsManager(SecretBase):
+    """
+    Task for retrieving secrets from an AWS Secrets Manager and returning it as a dictionary.
+    Note that all initialization arguments can optionally be provided or overwritten at runtime.
+
+    For authentication, there are two options: you can set the `AWS_CREDENTIALS` merak Secret
+    containing your AWS access keys which will be passed directly to the `boto3` client, or you
+    can [configure your flow's runtime
+    environment](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#guide-configuration)
+    for `boto3`.
+
+    Args:
+        - secret (str, optional): The name of the secret to retrieve.
+        - boto_kwargs (dict, optional): Additional keyword arguments to forward to the boto client.
+        - **kwargs (dict, optional): Additional keyword arguments to pass to the
+            Task constructor.
+    """
+
+    def __init__(self, secret: str = None, boto_kwargs: dict = None, **kwargs):
+        self.secret = secret
+
+        if boto_kwargs is None:
+            self.boto_kwargs = {}
+        else:
+            self.boto_kwargs = boto_kwargs
+
+        super().__init__(**kwargs)
+
+    @defaults_from_attrs("secret")
+    def run(self, secret: str = None, credentials: str = None) -> Union[dict, str]:
+        """
+        Task run method.
+
+        Args:
+            - secret (str): The name of the secret to retrieve.
+            - credentials (dict, optional): Your AWS credentials passed from an upstream
+                Secret task; this Secret must be a JSON string
+                with two keys: `ACCESS_KEY` and `SECRET_ACCESS_KEY` which will be
+                passed directly to `boto3`.  If not provided here or in context, `boto3`
+                will fall back on standard AWS rules for authentication.
+
+        Returns:
+            - Union[dict, str]: The contents of this secret. Either as a dictionary or
+            as a string.
+        """
+
+        if secret is None:
+            raise ValueError("A secret name must be provided.")
+
+        secrets_client = get_boto_client(
+            "secretsmanager", credentials=credentials, **self.boto_kwargs
+        )
+
+        secret_string = secrets_client.get_secret_value(SecretId=secret)["SecretString"]
+
+        try:
+            secret_dict = json.loads(secret_string)
+        except JSONDecodeError:
+            return secret_string
+
+        return secret_dict
