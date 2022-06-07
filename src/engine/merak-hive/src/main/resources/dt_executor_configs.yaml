@@ -1,0 +1,61 @@
+#Executor Configurations
+---
+batchEngine: "SPARK"
+udfStatements:
+  - "DROP FUNCTION IF EXISTS rowid"
+  - "CREATE TEMPORARY FUNCTION iwrowid AS 'io.merak.etl.udfs.RowIdUDF'"
+  - "DROP FUNCTION IF EXISTS ltrim"
+  - "CREATE TEMPORARY FUNCTION iwltrim AS 'io.merak.etl.udfs.LTrimUDF'"
+  - "DROP FUNCTION IF EXISTS rtrim"
+  - "CREATE TEMPORARY FUNCTION rtrim AS 'io.merak.etl.udfs.RTrimUDF'"
+  - "DROP FUNCTION IF EXISTS trim"
+  - "CREATE TEMPORARY FUNCTION trim AS 'io.merak.etl.udfs.TrimUDF'"
+  - "DROP FUNCTION IF EXISTS uuid"
+  - "CREATE TEMPORARY FUNCTION uuid AS 'io.merak.etl.udfs.UuidUDF'"
+  - "DROP FUNCTION IF EXISTS split"
+  - "CREATE TEMPORARY FUNCTION split AS 'io.merak.etl.udfs.SplitUDF'"
+  - "DROP FUNCTION IF EXISTS dateloop"
+  - "CREATE TEMPORARY FUNCTION dateloop AS 'io.merak.etl.udfs.LoopUDF'"
+  - "DROP FUNCTION IF EXISTS genrows"
+  - "CREATE TEMPORARY FUNCTION genrows AS 'io.merak.etl.udfs.GenRowsUDF'"
+  - "DROP FUNCTION IF EXISTS time_similarity"
+  - "CREATE TEMPORARY FUNCTION time_similarity AS 'io.merak.etl.udfs.TimeSimilarityUDF'"
+  - "DROP FUNCTION IF EXISTS SeqId"
+  - "CREATE TEMPORARY FUNCTION SeqId AS 'io.merak.etl.udfs.SeqIdUDF'"
+propertyStatements:
+  partitionedTargetProperties:
+    - "SET hive.exec.dynamic.partition = true"
+    - "SET hive.exec.dynamic.partition.mode = nonstrict "
+    - "SET hive.optimize.sort.dynamic.partition=true"
+
+---
+batchEngine: "HIVE"
+udfStatements:
+  - "DROP FUNCTION IF EXISTS rowid"
+  - "CREATE TEMPORARY FUNCTION rowid AS 'io.merak.etl.udfs.RowIdUDF'"
+  - "DROP FUNCTION IF EXISTS ltrim"
+  - "CREATE TEMPORARY FUNCTION ltrim AS 'io.merak.etl.udfs.LTrimUDF'"
+  - "DROP FUNCTION IF EXISTS rtrim"
+  - "CREATE TEMPORARY FUNCTION rtrim AS 'io.merak.etl.udfs.RTrimUDF'"
+  - "DROP FUNCTION IF EXISTS trim"
+  - "CREATE TEMPORARY FUNCTION trim AS 'io.merak.etl.udfs.TrimUDF'"
+  - "DROP FUNCTION IF EXISTS uuid"
+  - "CREATE TEMPORARY FUNCTION uuid AS 'io.merak.etl.udfs.UuidUDF'"
+  - "DROP FUNCTION IF EXISTS split"
+  - "CREATE TEMPORARY FUNCTION split AS 'io.merak.etl.udfs.SplitUDF'"
+  - "DROP FUNCTION IF EXISTS dateloop"
+  - "CREATE TEMPORARY FUNCTION dateloop AS 'io.merak.etl.udfs.LoopUDF'"
+  - "DROP FUNCTION IF EXISTS genrows"
+  - "CREATE TEMPORARY FUNCTION genrows AS 'io.merak.etl.udfs.GenRowsUDF'"
+  - "DROP FUNCTION IF EXISTS time_similarity"
+  - "CREATE TEMPORARY FUNCTION time_similarity AS 'io.merak.etl.udfs.TimeSimilarityUDF'"
+  - "DROP FUNCTION IF EXISTS SeqId"
+  - "CREATE TEMPORARY FUNCTION SeqId AS 'io.merak.etl.udfs.SeqIdUDF'"
+propertyStatements:
+  commonProperties:
+    #- "SET hive.enforce.bucketing=true"
+    - "SET hive.optimize.bucketingsorting=false"
+  partitionedTargetProperties:
+    - "SET hive.exec.dynamic.partition=true"
+    - "SET hive.exec.dynamic.partition.mode=nonstrict"
+    - "SET hive.optimize.sort.dynamic.partition=true"
