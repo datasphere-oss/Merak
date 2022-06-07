@@ -1,0 +1,181 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+   <parent>
+    <groupId>io.merak.etl</groupId>
+    <artifactId>merak-engine</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  
+  <groupId>io.merak.etl</groupId>
+  <artifactId>merak-spark</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <properties>
+        <livy-client>0.5.0-incubating</livy-client>
+        <httpcomponents-version>4.5.1</httpcomponents-version>
+        <spark.snowflake.version>2.4.0</spark.snowflake.version>
+        <sparkling.water.version>3.26.2-2.3</sparkling.water.version>
+        <snowflake.jdbc.version>3.6.4</snowflake.jdbc.version>
+        <snowflake.aws-sdk.version>1.11.354</snowflake.aws-sdk.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>io.merak.etl.extensions</groupId>
+            <artifactId>extensions</artifactId>
+            <version>${project.version}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.merak.etl</groupId>
+            <artifactId>adapters</artifactId>
+            <version>${project.version}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.merak.etl</groupId>
+            <artifactId>metadata</artifactId>
+            <version>${project.version}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.merak.etl</groupId>
+            <artifactId>job-dispatcher</artifactId>
+            <version>${project.version}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.merak.etl</groupId>
+            <artifactId>SDK</artifactId>
+            <version>${project.version}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>io.merak.etl</groupId>
+            <artifactId>awb-commons</artifactId>
+            <version>${project.version}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+        <!-- ML -->
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_2.11</artifactId>
+            <version>${spark.version}</version>
+            <scope>${include-scope}</scope>
+
+        </dependency>
+
+            <!-- JPMML -->
+
+        <dependency>
+            <groupId>org.jpmml</groupId>
+            <artifactId>jpmml-sparkml</artifactId>
+            <version>${jpmml-sparkml.version}</version>
+            <scope>${include-scope}</scope>
+
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jpmml</groupId>
+            <artifactId>jpmml-converter</artifactId>
+            <version>${jpmml-converter.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.xml.fastinfoset</groupId>
+                    <artifactId>FastInfoset</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.glassfish.jaxb</groupId>
+                    <artifactId>txw2</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jvnet.staxex</groupId>
+                    <artifactId>stax-ex</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jpmml</groupId>
+            <artifactId>pmml-model</artifactId>
+            <version>${jpmml-model.version}</version>
+            <scope>${include-scope}</scope>
+
+        </dependency>
+
+        <dependency>
+            <groupId>ai.h2o</groupId>
+            <artifactId>sparkling-water-package_2.11</artifactId>
+            <version>${sparkling.water.version}</version>
+            <scope>${include-scope}</scope>
+
+        </dependency>
+
+            <!-- Livy Dependencies -->
+        <dependency>
+            <groupId>org.apache.livy</groupId>
+            <artifactId>livy-client-http</artifactId>
+            <version>${livy-client}</version>
+            <scope>${include-scope}</scope>
+        </dependency>
+
+
+         <!-- snowflake -->
+        <dependency>
+            <groupId>net.snowflake</groupId>
+            <artifactId>spark-snowflake_2.11</artifactId>
+            <version>${spark.snowflake.version}</version>
+            <scope>${include-scope}</scope>
+
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>${snowflake.aws-sdk.version}</version>
+            <scope>${include-scope}</scope>
+
+        </dependency>
+        <dependency>
+            <groupId>net.snowflake</groupId>
+            <artifactId>snowflake-jdbc</artifactId>
+            <version>${snowflake.jdbc.version}</version>
+            <scope>${include-scope}</scope>
+           <type>jar</type>
+        </dependency>
+
+        <!-- Test -->
+
+        <dependency>
+            <groupId>io.merak.etl</groupId>
+            <artifactId>awb-commons</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+
+
+    </dependencies>
+
+</project>
